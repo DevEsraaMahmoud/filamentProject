@@ -18,7 +18,14 @@ class CountryResource extends Resource
 {
     protected static ?string $model = Country::class;
 
+    protected static ?string $navigationLabel = 'Country';
+
+
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    protected static ?string $navigationGroup = 'Location';
+
+    protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
     {
@@ -51,6 +58,7 @@ class CountryResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

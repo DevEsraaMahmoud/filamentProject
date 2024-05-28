@@ -17,7 +17,15 @@ class StateResource extends Resource
 {
     protected static ?string $model = State::class;
 
+    protected static ?string $navigationLabel = 'State';
+
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    protected static ?string $navigationGroup = 'Location';
+
+    protected static ?int $navigationSort = 2;
+
+
 
     public static function form(Form $form): Form
     {
@@ -58,6 +66,7 @@ class StateResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

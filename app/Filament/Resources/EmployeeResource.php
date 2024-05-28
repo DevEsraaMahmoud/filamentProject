@@ -9,14 +9,17 @@ use App\Models\Employee;
 use App\Models\State;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
@@ -77,24 +80,35 @@ class EmployeeResource extends Resource
                     ->description('Put the Employee name details in.')
                     ->schema([
                         TextInput::make('first_name')
-                            ->required()
-                            ->maxLength(255),
+                        ->rules(['required', 'max:255', 'string'])
+                        ->required()
+                        ->maxLength(255),
                         TextInput::make('last_name')
-                            ->required()
-                            ->maxLength(255),
+                        ->rules(['required', 'max:255', 'string'])
+                        ->required()
+                        ->maxLength(255),
+                        Textarea::make('address')
+                        ->rules(['required', 'max:255', 'string'])
+                        ->required()
+                        ->maxLength(255),
                     ])->columnSpan(1)->columns(2),
-                Section::make('Employee address')
-                    ->schema([
-                        TextInput::make('address')
-                            ->required()
-                            ->maxLength(255),
-                    ])->columnSpan(1)->columns(2),
+                Section::make('Image Upload')
+                ->schema([
+                    FileUpload::make('image')
+                    ->label('Upload Image')
+                    ->disk('public')
+                    ->directory('Images')
+                    ->image()
+                    ->imageEditor()
+                    // ->multiple()
+                    ])->columnSpan(1)->columns(1),
+
                 Section::make('Dates')
                     ->schema([
                         DatePicker::make('date_hired')
+                        ->rules(['required', 'date', 'after_or_equal:today'])
                             ->native(false)
                             ->displayFormat('d/m/Y')
-                            ->required(),
                     ])->columnSpan(1)->columns(2),
                 Section::make('Status')
                 ->schema([
@@ -109,6 +123,8 @@ class EmployeeResource extends Resource
     {
         return $table
             ->columns([
+                ImageColumn::make('image')
+                ->circular(),
                 TextColumn::make('country.name')
                     ->sortable()
                     ->searchable(isGlobal: false, isIndividual: true),
@@ -164,7 +180,6 @@ class EmployeeResource extends Resource
                  ->label('Status')
                  ->trueLabel('Active')
                  ->falseLabel('InActive')
-
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),

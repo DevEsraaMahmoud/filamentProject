@@ -21,6 +21,8 @@ return new class extends Migration
             $table->foreignId('country_id')->constrained()->onDelete('cascade');
             $table->foreignId('state_id')->constrained()->onDelete('cascade');
             $table->foreignId('city_id')->constrained()->onDelete('cascade');
+            $table->string('image')->nullable();
+            $table->boolean('status')->default(1);
             $table->timestamps();
         });
     }
