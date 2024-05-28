@@ -24,6 +24,6 @@ class Employee extends Model
 
     public function departments()
     {
-        return $this->belongsToMany(Department::class, 'employee_department');
+        return $this->belongsToMany(Department::class, 'department_employee', 'employee_id', 'department_id')->withPivot(['order']);
     }
 }

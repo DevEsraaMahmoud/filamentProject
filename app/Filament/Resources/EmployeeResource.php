@@ -33,6 +33,7 @@ class EmployeeResource extends Resource
                     ->schema([
                         Select::make('country_id')
                             ->relationship(name: 'country', titleAttribute: 'name')
+                            ->label('Country')
                             ->searchable()
                             ->preload()
                             ->live()
@@ -45,6 +46,7 @@ class EmployeeResource extends Resource
                             ->options(fn (Get $get): Collection => State::query()
                                 ->where('country_id', $get('country_id'))
                                 ->pluck('name', 'id'))
+                                ->label('State')
                             ->searchable()
                             ->preload()
                             ->live()
@@ -54,15 +56,18 @@ class EmployeeResource extends Resource
                             ->options(fn (Get $get): Collection => City::query()
                                 ->where('state_id', $get('state_id'))
                                 ->pluck('name', 'id'))
+                            ->label('City')
                             ->searchable()
                             ->preload()
                             ->required(),
-                        // Select::make('departments')
-                        //     ->relationship(name: 'departments', titleAttribute: 'name')
-                        //     ->multiple()
-                        //     ->searchable()
-                        //     ->preload()
-                        //     ->required(),
+                        Select::make('departments')
+                            ->relationship(name: 'departments', titleAttribute: 'name')
+                            ->label('Departments')
+                            ->multiple()
+                            ->searchable()
+                            ->preload()
+                            ->visibleOn('create')
+                            ->required(),
                     ])->columnSpan(1)->columns(2),
                 Section::make('User Name')
                     ->description('Put the user name details in.')
