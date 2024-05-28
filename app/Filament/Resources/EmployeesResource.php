@@ -26,14 +26,6 @@ class EmployeesResource extends Resource
     {
         return $form
         ->schema([
-            Forms\Components\Section::make('Relationships')
-                ->schema([
-                    Forms\Components\Select::make('department_id')
-                        ->relationship(name: 'department', titleAttribute: 'name')
-                        ->searchable()
-                        ->preload()
-                        ->required(),
-                ])->columns(2),
             Forms\Components\Section::make('User Name')
                 ->description('Put the user name details in.')
                 ->schema([
