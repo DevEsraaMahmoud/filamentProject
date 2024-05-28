@@ -7,6 +7,7 @@ use App\Filament\Resources\EmployeeResource\RelationManagers\DepartmentsRelation
 use App\Models\City;
 use App\Models\Employee;
 use App\Models\State;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
@@ -16,6 +17,9 @@ use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Collection;
 
@@ -46,7 +50,7 @@ class EmployeeResource extends Resource
                             ->options(fn (Get $get): Collection => State::query()
                                 ->where('country_id', $get('country_id'))
                                 ->pluck('name', 'id'))
-                                ->label('State')
+                            ->label('State')
                             ->searchable()
                             ->preload()
                             ->live()
@@ -69,8 +73,8 @@ class EmployeeResource extends Resource
                             ->visibleOn('create')
                             ->required(),
                     ])->columnSpan(1)->columns(2),
-                Section::make('User Name')
-                    ->description('Put the user name details in.')
+                Section::make('Employee Name')
+                    ->description('Put the Employee name details in.')
                     ->schema([
                         TextInput::make('first_name')
                             ->required()
@@ -79,7 +83,7 @@ class EmployeeResource extends Resource
                             ->required()
                             ->maxLength(255),
                     ])->columnSpan(1)->columns(2),
-                Section::make('User address')
+                Section::make('Employee address')
                     ->schema([
                         TextInput::make('address')
                             ->required()
@@ -92,6 +96,12 @@ class EmployeeResource extends Resource
                             ->displayFormat('d/m/Y')
                             ->required(),
                     ])->columnSpan(1)->columns(2),
+                Section::make('Status')
+                ->schema([
+                    Checkbox::make('status')
+                        ->label('Status')
+                    ])->columnSpan(1)->columns(2),
+
             ]);
     }
 
@@ -99,30 +109,63 @@ class EmployeeResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('country.name')
+                TextColumn::make('country.name')
                     ->sortable()
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('first_name')
-                    ->searchable()
+                    ->searchable(isGlobal: false, isIndividual: true),
+                TextColumn::make('first_name')
+                    ->searchable(isGlobal:true)
                     ->sortable(),
-                Tables\Columns\TextColumn::make('last_name')
+                TextColumn::make('last_name')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('address')
-                    ->searchable()
+                TextColumn::make('address')
+                    ->searchable(isGlobal:false, isIndividual:true)
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('date_hired')
+                TextColumn::make('date_hired')
                     ->date()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
+                TextColumn::make('created_at')
+                    ->label('Created date')
+                    ->date()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
+                TextColumn::make('updated_at')
+                    ->date()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('status')
+                ->label('Status')
+                ->badge()
+                ->color(function($state) {
+                    if ($state) {
+                        return 'success';
+                    } else {
+                        return 'danger';
+                    }
+                })
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true)
+                ->formatStateUsing(function ($state) {
+                    if ($state) {
+                        return 'Active';
+                    } else {
+                        return 'InActive';
+                    }
+                })
             ])
+            ->filters([
+                SelectFilter::make('country_id')
+                ->label('Country')
+                 ->relationship('country', 'name')
+                //  ->multiple()
+                 ->searchable()
+                 ->preload(),
 
+                 TernaryFilter::make('status')
+                 ->label('Status')
+                 ->trueLabel('Active')
+                 ->falseLabel('InActive')
+
+            ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),

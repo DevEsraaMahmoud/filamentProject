@@ -37,10 +37,12 @@ class StateResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('country.name')
+                    ->label('Country')
+                    ->searchable(isIndividual:true, isGlobal:false)
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
+                    ->searchable(isGlobal:true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

@@ -37,11 +37,14 @@ class CityResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('state_id')
+                    ->label('State')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('name')
+                    ->label('City')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Created at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
