@@ -109,6 +109,10 @@ class EmployeeResource extends Resource
                         ->rules(['required', 'date', 'after_or_equal:today'])
                             ->native(false)
                             ->displayFormat('d/m/Y')
+                            ->default(now())
+                            ->required()
+                            ->minDate(now())
+                            ->closeOnDateSelection()
                     ])->columnSpan(1)->columns(2),
                 Section::make('Status')
                 ->schema([
@@ -124,6 +128,7 @@ class EmployeeResource extends Resource
         return $table
             ->columns([
                 ImageColumn::make('image')
+                ->defaultImageUrl(url('/images/placeholder.jpg'))
                 ->circular(),
                 TextColumn::make('country.name')
                     ->sortable()
@@ -171,16 +176,17 @@ class EmployeeResource extends Resource
             ->filters([
                 SelectFilter::make('country_id')
                 ->label('Country')
-                 ->relationship('country', 'name')
+                ->relationship('country', 'name')
                 //  ->multiple()
-                 ->searchable()
-                 ->preload(),
+                ->searchable()
+                ->preload(),
 
-                 TernaryFilter::make('status')
-                 ->label('Status')
-                 ->trueLabel('Active')
-                 ->falseLabel('InActive')
+                TernaryFilter::make('status')
+                ->label('Status')
+                ->trueLabel('Active')
+                ->falseLabel('InActive')
             ])
+            ->defaultSort('created_at', 'desc')
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),

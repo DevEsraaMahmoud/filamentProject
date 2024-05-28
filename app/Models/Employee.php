@@ -22,6 +22,11 @@ class Employee extends Model
         return $this->belongsTo(City::class);
     }
 
+    public function state(): BelongsTo
+    {
+        return $this->belongsTo(City::class);
+    }
+
     public function departments()
     {
         return $this->belongsToMany(Department::class, 'department_employee', 'employee_id', 'department_id')->withPivot(['order']);
