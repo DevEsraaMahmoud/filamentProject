@@ -15,7 +15,6 @@ class City extends Model
         'state_id'
     ];
 
-
     public function employees(): HasMany
     {
         return $this->hasMany(Employee::class);
