@@ -12,11 +12,6 @@ class Employee extends Model
 
     protected $guarded = [];
 
-    public function department(): BelongsTo
-    {
-        return $this->belongsTo(Department::class);
-    }
-
     public function country(): BelongsTo
     {
         return $this->belongsTo(Country::class);
@@ -25,5 +20,10 @@ class Employee extends Model
     public function city(): BelongsTo
     {
         return $this->belongsTo(City::class);
+    }
+
+    public function departments()
+    {
+        return $this->belongsToMany(Department::class, 'employee_department');
     }
 }

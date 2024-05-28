@@ -15,6 +15,10 @@ class Country extends Model
         'phonecode'
     ];
 
+    public function states(): HasMany
+    {
+        return $this->hasMany(State::class);
+    }
 
     public function employees(): HasMany
     {
