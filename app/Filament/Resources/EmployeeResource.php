@@ -25,6 +25,9 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Collection;
+use stdClass;
+use Filament\Tables\Contracts\HasTable;
+
 
 class EmployeeResource extends Resource
 {
@@ -35,12 +38,44 @@ class EmployeeResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
-            ->schema([
-                Section::make('Relationships')
+            ->schema([Section::make('Employee Details')
+                ->schema([
+                    TextInput::make('first_name')
+                        ->rules(['required', 'max:255', 'string'])
+                        ->required()
+                        ->maxLength(255),
+                    TextInput::make('last_name')
+                        ->rules(['required', 'max:255', 'string'])
+                        ->required()
+                        ->maxLength(255),
+                    FileUpload::make('image')
+                        ->label('Upload Image')
+                        ->disk('public')
+                        ->directory('Images')
+                        ->image()
+                        ->imageEditor(),
+                    Textarea::make('address')
+                        ->rules(['required', 'max:255', 'string'])
+                        ->required()
+                        ->maxLength(255),
+                    DatePicker::make('date_hired')
+                        ->rules(['date'])
+                        ->native(false)
+                        ->displayFormat('d/m/Y')
+                        ->default(now())
+                        ->required()
+                        ->closeOnDateSelection()
+                        ->columnSpanFull(),
+                    Checkbox::make('status')
+                        ->label('Employee Status'),
+                ])->columnSpanFull()->columns(2),
+
+            Section::make('Department Details')
+                ->collapsed()
                     ->schema([
                         Select::make('country_id')
                             ->relationship(name: 'country', titleAttribute: 'name')
-                            ->label('Country')
+                ->label('Department Country')
                             ->searchable()
                             ->preload()
                             ->live()
@@ -53,7 +88,7 @@ class EmployeeResource extends Resource
                             ->options(fn (Get $get): Collection => State::query()
                                 ->where('country_id', $get('country_id'))
                                 ->pluck('name', 'id'))
-                            ->label('State')
+                    ->label('Department State')
                             ->searchable()
                             ->preload()
                             ->live()
@@ -63,63 +98,20 @@ class EmployeeResource extends Resource
                             ->options(fn (Get $get): Collection => City::query()
                                 ->where('state_id', $get('state_id'))
                                 ->pluck('name', 'id'))
-                            ->label('City')
+                    ->label('Department City')
                             ->searchable()
                             ->preload()
                             ->required(),
                         Select::make('departments')
                             ->relationship(name: 'departments', titleAttribute: 'name')
-                            ->label('Departments')
+                ->label('Employee Departments')
                             ->multiple()
                             ->searchable()
                             ->preload()
                             ->visibleOn('create')
+                    ->columnSpan(2)
                             ->required(),
-                    ])->columnSpan(1)->columns(2),
-                Section::make('Employee Name')
-                    ->description('Put the Employee name details in.')
-                    ->schema([
-                        TextInput::make('first_name')
-                        ->rules(['required', 'max:255', 'string'])
-                        ->required()
-                        ->maxLength(255),
-                        TextInput::make('last_name')
-                        ->rules(['required', 'max:255', 'string'])
-                        ->required()
-                        ->maxLength(255),
-                        Textarea::make('address')
-                        ->rules(['required', 'max:255', 'string'])
-                        ->required()
-                        ->maxLength(255),
-                    ])->columnSpan(1)->columns(2),
-                Section::make('Image Upload')
-                ->schema([
-                    FileUpload::make('image')
-                    ->label('Upload Image')
-                    ->disk('public')
-                    ->directory('Images')
-                    ->image()
-                    ->imageEditor()
-                    // ->multiple()
-                    ])->columnSpan(1)->columns(1),
-
-                Section::make('Dates')
-                    ->schema([
-                        DatePicker::make('date_hired')
-                        ->rules(['required', 'date', 'after_or_equal:today'])
-                            ->native(false)
-                            ->displayFormat('d/m/Y')
-                            ->default(now())
-                            ->required()
-                            ->minDate(now())
-                            ->closeOnDateSelection()
-                    ])->columnSpan(1)->columns(2),
-                Section::make('Status')
-                ->schema([
-                    Checkbox::make('status')
-                        ->label('Status')
-                    ])->columnSpan(1)->columns(2),
-
+                ])->columnSpan(2)->columns(3),
             ]);
     }
 
@@ -130,17 +122,20 @@ class EmployeeResource extends Resource
                 ImageColumn::make('image')
                 ->defaultImageUrl(url('/images/placeholder.jpg'))
                 ->circular(),
-                TextColumn::make('country.name')
+            TextColumn::make('Full Name')
+                ->getStateUsing(function (Employee $record) {
+                    return $record->first_name . ' ' . $record->last_name;
+                })
+                ->sortable(),
+            TextColumn::make('country.name')
                     ->sortable()
-                    ->searchable(isGlobal: false, isIndividual: true),
-                TextColumn::make('first_name')
-                    ->searchable(isGlobal:true)
-                    ->sortable(),
-                TextColumn::make('last_name')
-                    ->searchable(),
+                ->searchable(isGlobal: false, isIndividual: true),
                 TextColumn::make('address')
-                    ->searchable(isGlobal:false, isIndividual:true)
+                ->searchable(isGlobal: false, isIndividual: true)
                     ->toggleable(isToggledHiddenByDefault: true),
+            TextColumn::make('departments_count')
+            ->counts('departments')
+                ->sortable(),
                 TextColumn::make('date_hired')
                     ->date()
                     ->sortable(),
@@ -156,7 +151,7 @@ class EmployeeResource extends Resource
                 TextColumn::make('status')
                 ->label('Status')
                 ->badge()
-                ->color(function($state) {
+                ->color(function ($state) {
                     if ($state) {
                         return 'success';
                     } else {
@@ -180,7 +175,6 @@ class EmployeeResource extends Resource
                 //  ->multiple()
                 ->searchable()
                 ->preload(),
-
                 TernaryFilter::make('status')
                 ->label('Status')
                 ->trueLabel('Active')
