@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Exports\EmployeeExporter;
 use App\Filament\Resources\EmployeeResource\Pages;
 use App\Filament\Resources\EmployeeResource\RelationManagers\DepartmentsRelationManager;
 use App\Models\City;
@@ -19,15 +20,16 @@ use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\ExportAction;
+use Filament\Tables\Actions\ExportBulkAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Collection;
-use stdClass;
-use Filament\Tables\Contracts\HasTable;
-
+use Filament\Actions\Exports\Enums\ExportFormat;
+use Filament\Actions\Exports\Models\Export;
 
 class EmployeeResource extends Resource
 {
@@ -122,7 +124,8 @@ class EmployeeResource extends Resource
                 ImageColumn::make('image')
                 ->defaultImageUrl(url('/images/placeholder.jpg'))
                 ->circular(),
-            TextColumn::make('Full Name')
+            TextColumn::make('full_name')
+                ->label('Full Name')
                 ->getStateUsing(function (Employee $record) {
                     return $record->first_name . ' ' . $record->last_name;
                 })
@@ -184,16 +187,31 @@ class EmployeeResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make()
+                Tables\Actions\DeleteAction::make(),
+                ExportAction::make()
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    ExportBulkAction::make()
+                    ->exporter(EmployeeExporter::class)
+                    ->label('Export')
+                    ->fileDisk('FILAMENT_FILESYSTEM_DISK')
+
                 ]),
             ])
             ->emptyStateActions([
                 Tables\Actions\CreateAction::make(),
-            ]);
+
+            ])
+            ->headerActions([
+                ExportAction::make()
+                    ->exporter(EmployeeExporter::class)
+                    ->label('Export')
+                    ->fileDisk('FILAMENT_FILESYSTEM_DISK')
+                    ->maxRows(1000)
+                    ->chunkSize(250)
+                ]);
     }
 
     public static function getRelations(): array

@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Models\City;
 use App\Models\Country;
 use App\Models\State;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -23,7 +24,7 @@ class EmployeeFactory extends Factory
             'first_name' => fake()->firstName(),
             'last_name' => fake()->lastName(),
             'address' => fake()->address(),
-            'date_hired' => fake()->dateTime()->format('Y-m-d'),
+            'date_hired' => Carbon::parse(fake()->dateTime())->format('Y-m-d'),
             'country_id' => Country::factory(),
             'state_id' => State::factory(),
             'city_id' => City::factory(),

@@ -56,6 +56,13 @@ return [
             'throw' => false,
         ],
 
+        'FILAMENT_FILESYSTEM_DISK' =>[
+            'driver' => 'local',
+            'root' => public_path('exports'),
+            'url' => env('APP_URL').'/exports',
+            'visibility' => 'public',
+            'throw' => false,
+        ]
     ],
 
     /*
