@@ -121,9 +121,12 @@ class EmployeeResource extends Resource
     {
         return $table
             ->columns([
-                ImageColumn::make('image')
-                ->defaultImageUrl(url('/images/placeholder.jpg'))
-                ->circular(),
+            ImageColumn::make('image')
+            ->defaultImageUrl(url('/images/placeholder.jpg'))
+            ->circular(),
+            TextColumn::make('first_name')
+            ->label('First Name')
+            ->searchable(isGlobal: true, isIndividual: true),
             TextColumn::make('full_name')
                 ->label('Full Name')
                 ->getStateUsing(function (Employee $record) {

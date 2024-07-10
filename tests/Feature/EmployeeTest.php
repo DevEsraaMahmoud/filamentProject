@@ -1,15 +1,16 @@
 <?php
 
-use App\Filament\Resources\DepartmentResource\Pages\EditDepartment;
+use Carbon\Carbon;
+use App\Models\Employee;
+use App\Models\Department;
+use Filament\Actions\DeleteAction;
+use Illuminate\Support\Facades\Log;
+use function Pest\Livewire\livewire;
 use App\Filament\Resources\EmployeeResource;
 use App\Filament\Resources\EmployeeResource\Pages\EditEmployee;
-use App\Filament\Resources\EmployeeResource\Pages\ListEmployees;
-use App\Models\Department;
-use App\Models\Employee;
-use Carbon\Carbon;
-use Filament\Actions\DeleteAction;
 
-use function Pest\Livewire\livewire;
+use App\Filament\Resources\EmployeeResource\Pages\ListEmployees;
+use App\Filament\Resources\DepartmentResource\Pages\EditDepartment;
 
 // Form and Views Testing
 
@@ -178,56 +179,61 @@ it('can list departments employees', function () {
 
 // Table Testing
 
-// it('can sort employees by departments count', function () {
-//     $employees = Employee::factory()->count(10)->create();
+it('can sort employees by departments count', function () {
+    $employees = Employee::factory()->count(10)->create();
 
-//     livewire(EmployeeResource\Pages\ListEmployees::class)
-//         ->sortTable('departments_count')
-//         ->assertCanSeeTableRecords($employees->sortBy('departments_count'), inOrder: true)
-//         ->sortTable('departments_count', 'desc')
-//         ->assertCanSeeTableRecords($employees->sortByDesc('departments_count'), inOrder: true);
-// });
+    livewire(EmployeeResource\Pages\ListEmployees::class)
+    ->sortTable('departments_count')
+    ->assertCanSeeTableRecords($employees->sortBy('departments_count'), inOrder: true)
+    ->sortTable('departments_count', 'desc')
+    ->assertCanSeeTableRecords($employees->sortByDesc('departments_count'), inOrder: true);
+});
 
-// // it('can sort employees by full name', function () {
-// //     $employees = Employee::factory()->count(10)->create();
+it('can sort employees by full name in desc order', function () {
+    $employees = Employee::factory()->count(10)->create();
 
-// //     livewire(EmployeeResource\Pages\ListEmployees::class)
-// //         ->sortTable('full_name')
-// //         ->assertCanSeeTableRecords($employees->sortBy('full_name'), inOrder: true)
-// //         ->sortTable('full_name', 'desc')
-// //         ->assertCanSeeTableRecords($employees->sortByDesc('full_name'), inOrder: true);
-// // });
+    livewire(EmployeeResource\Pages\ListEmployees::class)
+        ->sortTable('full_name')
+        ->assertCanSeeTableRecords($employees->sortBy('full_name'), inOrder: true)
+        ->sortTable('full_name', 'desc')
+        ->assertCanSeeTableRecords($employees->sortByDesc('full_name'), inOrder: true);
+});
 
-// it('can sort employees by full name', function () {
-//     $employees = Employee::factory()->count(10)->create();
+it('can sort employees by full name in asc order', function () {
+    $employees = Employee::factory()->count(10)->create();
 
-//     // Compute the full_name for each employee for sorting purposes
-//     $employees->each(function ($employee) {
-//         $employee->full_name = $employee->first_name . ' ' . $employee->last_name;
-//     });
+    // Sort employees by full_name in ascending order
+    $sortedEmployeesAsc = $employees->sortBy('full_name')->values();
 
-//     // Sort employees by full_name in ascending order
-//     $sortedEmployeesAsc = $employees->sortBy('full_name')->values();
+    livewire(EmployeeResource\Pages\ListEmployees::class)
+        ->call('sortTable', 'full_name')
+        ->assertSeeInOrder($sortedEmployeesAsc->pluck('full_name')->toArray());
 
-//     livewire(EmployeeResource\Pages\ListEmployees::class)
-//         ->call('sortTable', 'full_name')
-//         ->assertSeeInOrder($sortedEmployeesAsc->pluck('full_name')->toArray());
+    // Sort employees by full_name in descending order
+    $sortedEmployeesDesc = $employees->sortByDesc('full_name')->values();
 
-//     // Sort employees by full_name in descending order
-//     $sortedEmployeesDesc = $employees->sortByDesc('full_name')->values();
+    livewire(EmployeeResource\Pages\ListEmployees::class)
+        ->call('sortTable', 'full_name', 'desc')
+        ->assertSeeInOrder($sortedEmployeesDesc->pluck('full_name')->toArray());
+});
 
-//     livewire(EmployeeResource\Pages\ListEmployees::class)
-//         ->call('sortTable', 'full_name', 'desc')
-//         ->assertSeeInOrder($sortedEmployeesDesc->pluck('full_name')->toArray());
-// });
+it('can search posts by first_name', function () {
+    $employees = Employee::factory()->count(10)->create();
 
-// it('can search posts by first_name', function () {
-//     $employees = Employee::factory()->count(10)->create();
+    $first_name = $employees->first()->first_name;
 
-//     $first_name = $employees->first()->first_name;
-
-//     livewire(EmployeeResource\Pages\ListEmployees::class)
-//         ->searchTable($first_name)
-//         ->assertCanSeeTableRecords($employees->where('first_name', $first_name))
-//         ->assertCanNotSeeTableRecords($employees->where('first_name', '!=', $first_name));
-// });
+    try {
+        livewire(EmployeeResource\Pages\ListEmployees::class)
+            ->searchTable($first_name)
+            ->assertCanSeeTableRecords($employees->where('first_name', $first_name))
+            ->assertCanNotSeeTableRecords($employees->where('first_name', '!=', $first_name));
+    } catch (\Exception $e) {
+        Log::error('Test failed for search posts by first_name', [
+            'error' => $e->getMessage(),
+            'first_name' => $first_name,
+            'employee_ids' => $employees->pluck('id')->toArray(),
+        ]);
+        throw $e;
+    }
+});
+// })->only();
