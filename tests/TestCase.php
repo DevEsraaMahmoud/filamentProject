@@ -2,7 +2,7 @@
 
 namespace Tests;
 
-use App\Models\User;
+use App\Models\Admin;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
@@ -12,9 +12,6 @@ abstract class TestCase extends BaseTestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->actingAs(User::factory()->create([
-            'is_admin' => true
-        ]));
+        $this->actingAs(Admin::factory()->create());
     }
 }

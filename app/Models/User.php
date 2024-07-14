@@ -26,20 +26,6 @@ class User extends Authenticatable
     //     return $this->isSSOAuthenticated();
     // }
 
-    // /**
-    //  * Check if the user is authenticated via SSO.
-    //  *
-    //  * @return bool
-    //  */
-    // public function isSSOAuthenticated(): bool
-    // {
-    //     // Add your logic here to check if the user is authenticated via SSO
-    //     // This is just a placeholder. Replace it with the actual implementation.
-
-    //     // For example, you might check for an SSO-specific session variable
-    //     return session()->has('sso_authenticated') && session('sso_authenticated') === true;
-    // }
-
     /**
      * The attributes that are mass assignable.
      *

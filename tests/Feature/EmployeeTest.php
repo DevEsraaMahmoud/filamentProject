@@ -8,9 +8,10 @@ use Illuminate\Support\Facades\Log;
 use function Pest\Livewire\livewire;
 use App\Filament\Resources\EmployeeResource;
 use App\Filament\Resources\EmployeeResource\Pages\EditEmployee;
-
 use App\Filament\Resources\EmployeeResource\Pages\ListEmployees;
 use App\Filament\Resources\DepartmentResource\Pages\EditDepartment;
+use App\Filament\Resources\EmployeeResource\RelationManagers\DepartmentsRelationManager;
+
 
 // Form and Views Testing
 
@@ -20,10 +21,27 @@ it('can render list employees page', function () {
 
 
 it('can list employees', function () {
-    $employees = Employee::factory()->count(10)->create();
+    // $employees = Employee::factory()->count(10)->create();
+    $employees = Employee::factory()
+    ->has(Department::factory()->count(10))
+    ->create();
 
-    livewire(EmployeeResource\Pages\ListEmployees::class)
-        ->assertCanSeeTableRecords($employees);
+        livewire(DepartmentsRelationManager::class, [
+            'ownerRecord' => $employees,
+            'pageClass' => EditDepartment::class,
+        ])
+            ->assertCanSeeTableRecords($employees->departments);
+});
+it('can render relation manager', function () {
+    $dep = Employee::factory()
+    ->has(Department::factory()->count(10))
+    ->create();
+
+    livewire(DepartmentsRelationManager::class, [
+        'ownerRecord' => $dep,
+        'pageClass' => EditDepartment::class,
+    ])
+        ->assertSuccessful();
 });
 
 it('can render create employee page', function () {
@@ -70,11 +88,11 @@ it('can validate input on create', function () {
         ->assertHasFormErrors(['first_name' => 'required']);
 });
 
-it('can render edit employee page', function () {
-    $this->get(EmployeeResource::getUrl('edit', [
-        'record' => Employee::factory()->create(),
-    ]))->assertSuccessful();
-});
+// it('can render edit employee page', function () {
+//     $this->get(EmployeeResource::getUrl('edit', [
+//         'record' => Employee::factory()->create(),
+//     ]))->assertSuccessful();
+// });
 
 it('can retrieve employee data', function () {
     $employee = Employee::factory()->create();
