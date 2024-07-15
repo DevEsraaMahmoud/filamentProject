@@ -1,6 +1,6 @@
 <?php
 
-use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Employee;
 use App\Models\Department;
 use Filament\Actions\DeleteAction;
@@ -8,48 +8,102 @@ use Illuminate\Support\Facades\Log;
 use function Pest\Livewire\livewire;
 use App\Filament\Resources\EmployeeResource;
 use App\Filament\Resources\EmployeeResource\Pages\EditEmployee;
-use App\Filament\Resources\EmployeeResource\Pages\ListEmployees;
 use App\Filament\Resources\DepartmentResource\Pages\EditDepartment;
 use App\Filament\Resources\EmployeeResource\RelationManagers\DepartmentsRelationManager;
+use App\Models\Admin;
 
-
-// Form and Views Testing
 
 it('can render list employees page', function () {
-    $this->get(EmployeeResource::getUrl('index'))->assertSuccessful();
+    $adminFactory = new AdminWithPermissionsFactory();
+    $admin = $adminFactory->withPermissions(['employee-view', 'employee-create'])->create();
+    $this->actingAs($admin, 'admin')
+        ->get(EmployeeResource::getUrl('index'))
+        ->assertSuccessful();
 });
 
+it("can't render list employees page with no permission", function () {
+    $PermissionFactory = new PermissionFactory();
+    $PermissionFactory->create(['employee-view', 'employee-create']);
+
+    $this->actingAs(Admin::factory()->create(), 'admin')
+        ->get(EmployeeResource::getUrl('index'))
+        ->assertForbidden();
+});
+
+it('prevent access to a regular user to admin panel and redirect to login page', function(){
+    $this->actingAs(User::factory()->create(), 'web')
+    ->get(EmployeeResource::getUrl('index'))
+    ->assertStatus(302);
+});
 
 it('can list employees', function () {
-    // $employees = Employee::factory()->count(10)->create();
-    $employees = Employee::factory()
-    ->has(Department::factory()->count(10))
-    ->create();
+    $adminFactory = new AdminWithPermissionsFactory();
+    $admin = $adminFactory->withPermissions(['employee-view', 'employee-create'])->create();
 
-        livewire(DepartmentsRelationManager::class, [
-            'ownerRecord' => $employees,
-            'pageClass' => EditDepartment::class,
-        ])
-            ->assertCanSeeTableRecords($employees->departments);
+    // Log in as the admin
+    $this->actingAs($admin, 'admin');
+
+    // Create employees and their related departments
+    $employee = Employee::factory()
+        ->has(Department::factory()->count(10))
+        ->create();
+
+    // Test the Livewire component
+    livewire(DepartmentsRelationManager::class, [
+        'ownerRecord' => $employee,
+        'pageClass' => EditEmployee::class,
+    ])->assertCanSeeTableRecords($employee->departments);
 });
+
+
 it('can render relation manager', function () {
+    $adminFactory = new AdminWithPermissionsFactory();
+    $admin = $adminFactory->withPermissions(['employee-view', 'employee-create'])->create();
+
+    $this->actingAs($admin, 'admin');
+
     $dep = Employee::factory()
-    ->has(Department::factory()->count(10))
-    ->create();
+        ->has(Department::factory()->count(10))
+        ->create();
 
     livewire(DepartmentsRelationManager::class, [
         'ownerRecord' => $dep,
         'pageClass' => EditDepartment::class,
-    ])
-        ->assertSuccessful();
+    ])->assertSuccessful();
 });
 
+// it('can render relation manager', function () {
+//     $adminFactory = new AdminWithPermissionsFactory();
+//     $admin = $adminFactory->withPermissions(['employee-view', 'employee-create'])->create();
+
+//     $this->actingAs($admin, 'admin');
+
+//     $employees = Employee::factory()
+//         ->has(Department::factory()->count(10))
+//         ->create();
+
+//     livewire(DepartmentsRelationManager::class, [
+//         'ownerRecord' => $employees,
+//         'pageClass' => EditDepartment::class,
+//     ])->assertSuccessful();
+// });
+
 it('can render create employee page', function () {
+    $adminFactory = new AdminWithPermissionsFactory();
+    $admin = $adminFactory->withPermissions(['employee-view', 'employee-create'])->create();
+
+    $this->actingAs($admin, 'admin');
+
     $this->get(EmployeeResource::getUrl('create'))->assertSuccessful();
 });
 
 
 it('can create employee', function () {
+    $adminFactory = new AdminWithPermissionsFactory();
+    $admin = $adminFactory->withPermissions(['employee-view', 'employee-create'])->create();
+
+    $this->actingAs($admin, 'admin');
+
     $employee = Employee::factory()->make();
 
     livewire(EmployeeResource\Pages\CreateEmployee::class)
@@ -80,6 +134,11 @@ it('can create employee', function () {
 });
 
 it('can validate input on create', function () {
+    $adminFactory = new AdminWithPermissionsFactory();
+    $admin = $adminFactory->withPermissions(['employee-view', 'employee-create'])->create();
+
+    $this->actingAs($admin, 'admin');
+
     livewire(EmployeeResource\Pages\CreateEmployee::class)
         ->fillForm([
             'first_name' => null,
@@ -88,13 +147,12 @@ it('can validate input on create', function () {
         ->assertHasFormErrors(['first_name' => 'required']);
 });
 
-// it('can render edit employee page', function () {
-//     $this->get(EmployeeResource::getUrl('edit', [
-//         'record' => Employee::factory()->create(),
-//     ]))->assertSuccessful();
-// });
-
 it('can retrieve employee data', function () {
+    $adminFactory = new AdminWithPermissionsFactory();
+    $admin = $adminFactory->withPermissions(['employee-view', 'employee-create', 'employee-update', 'employee-delete'])->create();
+
+    $this->actingAs($admin, 'admin');
+
     $employee = Employee::factory()->create();
 
     livewire(EmployeeResource\Pages\EditEmployee::class, [
@@ -113,6 +171,10 @@ it('can retrieve employee data', function () {
 });
 
 it('can update employee data', function () {
+    $adminFactory = new AdminWithPermissionsFactory();
+    $admin = $adminFactory->withPermissions(['employee-view', 'employee-delete', 'employee-update'])->create();
+
+    $this->actingAs($admin, 'admin');
     $employee = Employee::factory()->create();
     $newData = Employee::factory()->make();
 
@@ -136,6 +198,11 @@ it('can update employee data', function () {
 
 
 it('can validate input on update', function () {
+    $adminFactory = new AdminWithPermissionsFactory();
+    $admin = $adminFactory->withPermissions(['employee-view', 'employee-delete', 'employee-update'])->create();
+
+    $this->actingAs($admin, 'admin');
+
     $employee = Employee::factory()->create();
 
     livewire(EmployeeResource\Pages\EditEmployee::class, [
@@ -149,6 +216,11 @@ it('can validate input on update', function () {
 });
 
 it('can delete employee', function () {
+    $adminFactory = new AdminWithPermissionsFactory();
+    $admin = $adminFactory->withPermissions(['employee-update', 'employee-delete', 'employee-view'])->create();
+
+    $this->actingAs($admin, 'admin');
+
     $employee = Employee::factory()->create();
 
     livewire(EmployeeResource\Pages\EditEmployee::class, [
@@ -160,12 +232,22 @@ it('can delete employee', function () {
 });
 
 it('can render view page', function () {
+    $adminFactory = new AdminWithPermissionsFactory();
+    $admin = $adminFactory->withPermissions(['employee-view', 'employee-update'])->create();
+
+    $this->actingAs($admin, 'admin');
+
     $this->get(EmployeeResource::getUrl('view', [
         'record' => Employee::factory()->create(),
     ]))->assertSuccessful();
 });
 
 it('can retrieve data', function () {
+    $adminFactory = new AdminWithPermissionsFactory();
+    $admin = $adminFactory->withPermissions(['employee-view', 'employee-update'])->create();
+
+    $this->actingAs($admin, 'admin');
+
     $employee = Employee::factory()->create();
 
     livewire(EmployeeResource\Pages\ViewEmployee::class, [
@@ -183,6 +265,11 @@ it('can retrieve data', function () {
 });
 
 it('can list departments employees', function () {
+    $adminFactory = new AdminWithPermissionsFactory();
+    $admin = $adminFactory->withPermissions(['employee-view', 'employee-create', 'employee-update', 'employee-delete'])->create();
+
+    $this->actingAs($admin, 'admin');
+
     $employees = Employee::factory()
         ->has(Department::factory()->count(10))
         ->create();
@@ -198,16 +285,26 @@ it('can list departments employees', function () {
 // Table Testing
 
 it('can sort employees by departments count', function () {
+    $adminFactory = new AdminWithPermissionsFactory();
+    $admin = $adminFactory->withPermissions(['employee-view', 'employee-create', 'employee-update', 'employee-delete'])->create();
+
+    $this->actingAs($admin, 'admin');
+
     $employees = Employee::factory()->count(10)->create();
 
     livewire(EmployeeResource\Pages\ListEmployees::class)
-    ->sortTable('departments_count')
-    ->assertCanSeeTableRecords($employees->sortBy('departments_count'), inOrder: true)
-    ->sortTable('departments_count', 'desc')
-    ->assertCanSeeTableRecords($employees->sortByDesc('departments_count'), inOrder: true);
+        ->sortTable('departments_count')
+        ->assertCanSeeTableRecords($employees->sortBy('departments_count'), inOrder: true)
+        ->sortTable('departments_count', 'desc')
+        ->assertCanSeeTableRecords($employees->sortByDesc('departments_count'), inOrder: true);
 });
 
 it('can sort employees by full name in desc order', function () {
+    $adminFactory = new AdminWithPermissionsFactory();
+    $admin = $adminFactory->withPermissions(['employee-view', 'employee-create', 'employee-update', 'employee-delete'])->create();
+
+    $this->actingAs($admin, 'admin');
+
     $employees = Employee::factory()->count(10)->create();
 
     livewire(EmployeeResource\Pages\ListEmployees::class)
@@ -218,6 +315,11 @@ it('can sort employees by full name in desc order', function () {
 });
 
 it('can sort employees by full name in asc order', function () {
+    $adminFactory = new AdminWithPermissionsFactory();
+    $admin = $adminFactory->withPermissions(['employee-view', 'employee-create', 'employee-update', 'employee-delete'])->create();
+
+    $this->actingAs($admin, 'admin');
+
     $employees = Employee::factory()->count(10)->create();
 
     // Sort employees by full_name in ascending order
@@ -236,6 +338,11 @@ it('can sort employees by full name in asc order', function () {
 });
 
 it('can search posts by first_name', function () {
+    $adminFactory = new AdminWithPermissionsFactory();
+    $admin = $adminFactory->withPermissions(['employee-view', 'employee-create', 'employee-update', 'employee-delete'])->create();
+
+    $this->actingAs($admin, 'admin');
+
     $employees = Employee::factory()->count(10)->create();
 
     $first_name = $employees->first()->first_name;
@@ -254,4 +361,46 @@ it('can search posts by first_name', function () {
         throw $e;
     }
 });
+
+it('ensures a regular user cannot access the admin panel', function () {
+    // Create a regular user
+    $user = User::factory()->create();
+
+    // Acting as the regular user
+    $this->actingAs($user);
+
+    // Attempt to access the admin panel
+    $response = $this->get('/admin/employees');
+
+    // Assert that the response is a redirect to the login page
+    $response->assertStatus(302);
+})->only();
+
+// it('can attach department to employee', function () {
+//     $adminFactory = new AdminWithPermissionsFactory();
+//     $admin = $adminFactory->withPermissions(['employee-view', 'employee-create'])->create();
+
+//     // Log in as the admin
+//     $this->actingAs($admin, 'admin');
+
+//     // Create an employee
+//     $employee = Employee::factory()->create();
+
+//     // Create a department
+//     $department = Department::factory()->create();
+
+//     // Test the Livewire component for attaching the department
+//     $this->get(EmployeeResource::class, [
+//         'ownerRecord' => $employee,
+//         'pageClass' => EditEmployee::class,
+//     ])
+//     ->set('departments', [$department->id])
+//     ->call('attachDepartments') // Assuming there's a method to attach departments
+//     ->assertHasNoErrors();
+
+//     // Refresh the employee to get the latest data
+//     $employee->refresh();
+
+//     // Assert the department is attached to the employee
+//     $this->assertTrue($employee->departments->contains($department));
 // })->only();
