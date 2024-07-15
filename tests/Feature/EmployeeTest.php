@@ -374,7 +374,7 @@ it('ensures a regular user cannot access the admin panel', function () {
 
     // Assert that the response is a redirect to the login page
     $response->assertStatus(302);
-})->only();
+});
 
 // it('can attach department to employee', function () {
 //     $adminFactory = new AdminWithPermissionsFactory();
